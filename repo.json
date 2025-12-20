@@ -1,0 +1,8 @@
+{
+  "name": "SeriesKao Repository",
+  "description": "Repositorio para SeriesKao",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/DamianKing12/Repositorio-Cloudstream-SeriesKao/main/builds/plugins.json"
+  ]
+}
