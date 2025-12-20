@@ -106,8 +106,6 @@ class SeriesKaoProvider : MainAPI() {
         doc.select("track[kind=subtitles]").forEach { track ->
             val src = track.attr("src")
             if (src.isNotBlank()) {
-                // CORRECCIÓN 1: Constructor de SubtitleFile simplificado
-                // (lang, url) suele ser el constructor público seguro.
                 subtitleCallback(
                     SubtitleFile(
                         lang = track.attr("srclang") ?: "es",
@@ -129,18 +127,18 @@ class SeriesKaoProvider : MainAPI() {
             .trim()
 
         return try {
-            // CORRECCIÓN 2: Uso correcto de parseJson como extensión
             val servers = AppUtils.parseJson<List<ServerData>>(serversJson)
             
             servers.forEach { server ->
                 val cleanUrl = server.url.replace("\\/", "/")
                 
-                // CORRECCIÓN 3: Pasar parámetros directamente al constructor/función
-                // en lugar de usar { this.calidad = ... }
+                // CORRECCIÓN PRINCIPAL AQUI:
+                // Usamos directamente el constructor ExtractorLink en lugar de newExtractorLink
+                // para poder pasar todos los parámetros necesarios.
                 callback(
-                    newExtractorLink(
-                        name = server.title,
+                    ExtractorLink(
                         source = server.title,
+                        name = server.title,
                         url = cleanUrl,
                         referer = mainUrl,
                         quality = getQuality(server.title),
