@@ -3,17 +3,15 @@ package com.DamianKing12
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import java.net.URLEncoder
-import android.util.Log
 
 class SeriesKaoProvider : MainAPI() {
+
     override var mainUrl = "https://serieskao.top"
     override var name = "SeriesKao"
     override var lang = "es"
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
     override val hasMainPage = false
-    
-    // Eliminados: useTrackerLoading, rateLimit (no existen en esta versión)
-    
+
     private val headers = mapOf(
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     )
@@ -54,10 +52,10 @@ class SeriesKaoProvider : MainAPI() {
             throw ErrorLoadingException("URL no válida: $url")
         }
 
-        val title = doc.selectFirst("h1")?.text()?.trim() 
-            ?: doc.selectFirst(".original-title")?.text()?.trim() 
+        val title = doc.selectFirst("h1")?.text()?.trim()
+            ?: doc.selectFirst(".original-title")?.text()?.trim()
             ?: throw ErrorLoadingException("No se pudo obtener el título")
-            
+
         val poster = doc.selectFirst("meta[property='og:image']")?.attr("content") ?: ""
         val description = doc.selectFirst(".synopsis, .description, .plot")?.text()?.trim()
             ?: doc.select("p").firstOrNull { it.text().length > 50 }?.text()?.trim()
@@ -70,15 +68,15 @@ class SeriesKaoProvider : MainAPI() {
         } else {
             val episodes = doc.select("#season-tabs li a[data-tab]").mapNotNull { seasonLink ->
                 val seasonId = seasonLink.attr("data-tab").substringAfter("season-").toIntOrNull() ?: return@mapNotNull null
-                
+
                 val seasonContent = doc.selectFirst("div.tab-content #season-${seasonId}")
-                
+
                 seasonContent?.select("a.episode-item")?.mapNotNull { episodeLink ->
                     val href = episodeLink.attr("href").trim()
                     val epNumText = episodeLink.selectFirst(".episode-number")?.text() ?: ""
                     val epNum = epNumText.removePrefix("E").toIntOrNull() ?: 0
                     val epTitle = episodeLink.selectFirst(".episode-title")?.text()?.trim()
-                    
+
                     if (href.isNotBlank() && epNum > 0) {
                         newEpisode(href) {
                             this.name = epTitle
@@ -108,11 +106,12 @@ class SeriesKaoProvider : MainAPI() {
         doc.select("track[kind=subtitles]").forEach { track ->
             val src = track.attr("src")
             if (src.isNotBlank()) {
+                // CORRECCIÓN 1: Constructor de SubtitleFile simplificado
+                // (lang, url) suele ser el constructor público seguro.
                 subtitleCallback(
                     SubtitleFile(
                         lang = track.attr("srclang") ?: "es",
-                        url = src,
-                        name = track.attr("label") ?: "Español"
+                        url = src
                     )
                 )
             }
@@ -121,7 +120,7 @@ class SeriesKaoProvider : MainAPI() {
         // Servidores
         val scriptElement = doc.selectFirst("script:containsData(var servers =)")
         if (scriptElement == null) {
-            return false // No hay servidores, no es error
+            return false
         }
 
         val serversJson = scriptElement.data()
@@ -130,28 +129,38 @@ class SeriesKaoProvider : MainAPI() {
             .trim()
 
         return try {
-            val servers = parseJson<List<ServerData>>(serversJson)
+            // CORRECCIÓN 2: Uso correcto de parseJson como extensión
+            val servers = AppUtils.parseJson<List<ServerData>>(serversJson)
+            
             servers.forEach { server ->
                 val cleanUrl = server.url.replace("\\/", "/")
+                
+                // CORRECCIÓN 3: Pasar parámetros directamente al constructor/función
+                // en lugar de usar { this.calidad = ... }
                 callback(
-                    newExtractorLink(server.title, server.title, cleanUrl) {
-                        this.referer = mainUrl
-                        this.quality = getQuality(server.title)
-                        this.isM3u8 = cleanUrl.contains(".m3u8", ignoreCase = true)
-                    }
+                    newExtractorLink(
+                        name = server.title,
+                        source = server.title,
+                        url = cleanUrl,
+                        referer = mainUrl,
+                        quality = getQuality(server.title),
+                        isM3u8 = cleanUrl.contains(".m3u8", ignoreCase = true)
+                    )
                 )
             }
             servers.isNotEmpty()
         } catch (e: Exception) {
-            false // Error al parsear, devuelve vacío
+            e.printStackTrace()
+            false
         }
     }
 
     private fun getQuality(name: String): Int {
+        val lowerName = name.lowercase()
         return when {
-            "1080" in name || "fullhd" in name -> Qualities.P1080.value
-            "720" in name || "hd" in name -> Qualities.P720.value
-            "480" in name || "sd" in name -> Qualities.P480.value
+            "1080" in lowerName || "fullhd" in lowerName -> Qualities.P1080.value
+            "720" in lowerName || "hd" in lowerName -> Qualities.P720.value
+            "480" in lowerName || "sd" in lowerName -> Qualities.P480.value
             else -> Qualities.Unknown.value
         }
     }
