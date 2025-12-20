@@ -94,6 +94,8 @@ class SeriesKaoProvider : MainAPI() {
         }
     }
 
+    // Esta etiqueta silencia el error de "Deprecated" permitiendo que compile
+    @Suppress("DEPRECATION")
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
@@ -132,9 +134,6 @@ class SeriesKaoProvider : MainAPI() {
             servers.forEach { server ->
                 val cleanUrl = server.url.replace("\\/", "/")
                 
-                // CORRECCIÓN PRINCIPAL AQUI:
-                // Usamos directamente el constructor ExtractorLink en lugar de newExtractorLink
-                // para poder pasar todos los parámetros necesarios.
                 callback(
                     ExtractorLink(
                         source = server.title,
