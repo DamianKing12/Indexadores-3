@@ -103,37 +103,36 @@ class SeriesKaoProvider : MainAPI() {
     ): Boolean {
         val doc = app.get(data, headers = headers).document
 
-        // 1. Subtítulos (Usando constructor compatible con v4)
+        // 1. Subtítulos
         doc.select("track[kind=subtitles]").forEach { track ->
             val src = track.attr("src")
             if (src.isNotBlank()) {
                 subtitleCallback(
-                    SubtitleFile(
-                        url = src,
-                        lang = track.attr("srclang") ?: "es"
+                    newSubtitleFile(
+                        lang = track.attr("srclang") ?: "es",
+                        url = src
                     )
                 )
             }
         }
 
-        // 2. Extracción de IFRAMES
+        // 2. Extracción de IFRAMES (Usando newExtractorLink)
         doc.select("iframe").forEach { iframe ->
             val src = iframe.attr("src")
             if (src.isNotBlank()) {
                 callback(
-                    ExtractorLink(
+                    newExtractorLink(
                         source = "SeriesKao",
                         name = "Enlace Externo",
                         url = src,
                         referer = mainUrl,
-                        quality = Qualities.Unknown.value,
-                        isM3u8 = src.contains(".m3u8", ignoreCase = true)
+                        quality = Qualities.Unknown.value
                     )
                 )
             }
         }
 
-        // 3. Extracción de Servidores desde JSON
+        // 3. Extracción de Servidores desde JSON (Usando newExtractorLink)
         val scriptElement = doc.selectFirst("script:containsData(var servers =)")
         if (scriptElement != null) {
             val serversJson = scriptElement.data().substringAfter("var servers = ").substringBefore(";").trim()
@@ -142,7 +141,7 @@ class SeriesKaoProvider : MainAPI() {
                 servers.forEach { server ->
                     val cleanUrl = server.url.replace("\\/", "/")
                     callback(
-                        ExtractorLink(
+                        newExtractorLink(
                             source = server.title,
                             name = server.title,
                             url = cleanUrl,
