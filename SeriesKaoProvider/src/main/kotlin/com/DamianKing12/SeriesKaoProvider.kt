@@ -103,37 +103,37 @@ class SeriesKaoProvider : MainAPI() {
     ): Boolean {
         val doc = app.get(data, headers = headers).document
 
-        // 1. Subtítulos
+        // 1. Subtítulos (Usando constructor compatible con v4)
         doc.select("track[kind=subtitles]").forEach { track ->
             val src = track.attr("src")
             if (src.isNotBlank()) {
                 subtitleCallback(
                     SubtitleFile(
-                        lang = track.attr("srclang") ?: "es",
-                        url = src
+                        url = src,
+                        lang = track.attr("srclang") ?: "es"
                     )
                 )
             }
         }
 
-        // 2. Extracción de IFRAMES (Corregido)
+        // 2. Extracción de IFRAMES
         doc.select("iframe").forEach { iframe ->
             val src = iframe.attr("src")
             if (src.isNotBlank()) {
                 callback(
-                    newExtractorLink(
+                    ExtractorLink(
                         source = "SeriesKao",
                         name = "Enlace Externo",
-                        url = src
-                    ).apply {
-                        this.referer = mainUrl
-                        this.quality = Qualities.Unknown.value
-                    }
+                        url = src,
+                        referer = mainUrl,
+                        quality = Qualities.Unknown.value,
+                        isM3u8 = src.contains(".m3u8", ignoreCase = true)
+                    )
                 )
             }
         }
 
-        // 3. Extracción de Servidores desde JSON (Corregido)
+        // 3. Extracción de Servidores desde JSON
         val scriptElement = doc.selectFirst("script:containsData(var servers =)")
         if (scriptElement != null) {
             val serversJson = scriptElement.data().substringAfter("var servers = ").substringBefore(";").trim()
@@ -142,15 +142,14 @@ class SeriesKaoProvider : MainAPI() {
                 servers.forEach { server ->
                     val cleanUrl = server.url.replace("\\/", "/")
                     callback(
-                        newExtractorLink(
+                        ExtractorLink(
                             source = server.title,
                             name = server.title,
-                            url = cleanUrl
-                        ).apply {
-                            this.referer = mainUrl
-                            this.quality = getQuality(server.title)
-                            this.isM3u8 = cleanUrl.contains(".m3u8", ignoreCase = true)
-                        }
+                            url = cleanUrl,
+                            referer = mainUrl,
+                            quality = getQuality(server.title),
+                            isM3u8 = cleanUrl.contains(".m3u8", ignoreCase = true)
+                        )
                     )
                 }
             } catch (e: Exception) { e.printStackTrace() }
