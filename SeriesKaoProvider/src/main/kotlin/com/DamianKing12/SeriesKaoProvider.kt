@@ -94,7 +94,6 @@ class SeriesKaoProvider : MainAPI() {
         }
     }
 
-    // 🔥 CORREGIDO: newExtractorLink() con sintaxis lambda - SIN WARNINGS
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
@@ -103,12 +102,12 @@ class SeriesKaoProvider : MainAPI() {
     ): Boolean {
         val doc = app.get(data, headers = headers).document
 
-        // 1️⃣ SUBTÍTULOS
+        // Subtítulos
         doc.select("track[kind=subtitles]").forEach { track ->
             val src = track.attr("src")
             if (src.isNotBlank()) {
                 subtitleCallback(
-                    newSubtitleFile(
+                    SubtitleFile(
                         lang = track.attr("srclang") ?: "es",
                         url = src
                     )
@@ -116,69 +115,40 @@ class SeriesKaoProvider : MainAPI() {
             }
         }
 
-        // 2️⃣ IFRAMES - newExtractorLink con bloque apply
-        doc.select("iframe").forEach { iframe ->
-            val src = iframe.attr("src")
-            if (src.isNotBlank()) {
-                callback(
-                    newExtractorLink(
-                        name = "iframe",
-                        url = src,  // Argumento posicional
-                        source = "iframe"
-                    ) {
-                        // Bloque apply para propiedades adicionales
-                        this.referer = mainUrl
-                        this.isM3u8 = false
-                    }
-                )
-            }
-        }
-
-        // 3️⃣ MASTER.TXT - newExtractorLink
-        val masterScript = doc.select("script").map { it.data() }.firstOrNull { it.contains("master.txt") }
-        if (masterScript != null) {
-            val masterUrl = Regex("""(https?://[^"'\s]+master\.txt)""").find(masterScript)?.value
-            if (masterUrl != null) {
-                callback(
-                    newExtractorLink(
-                        name = "HLS",
-                        url = masterUrl,
-                        source = "HLS"
-                    ) {
-                        this.referer = mainUrl
-                        this.isM3u8 = true
-                    }
-                )
-            }
-        }
-
-        // 4️⃣ SERVIDORES VAR SERVERS - newExtractorLink
+        // Servidores
         val scriptElement = doc.selectFirst("script:containsData(var servers =)")
-        if (scriptElement != null) {
-            val serversJson = scriptElement.data().substringAfter("var servers = ").substringBefore(";").trim()
-            return try {
-                val servers = AppUtils.parseJson<List<ServerData>>(serversJson)
-                servers.forEach { server ->
-                    val cleanUrl = server.url.replace("\\/", "/")
-                    callback(
-                        newExtractorLink(
-                            name = server.title,
-                            url = cleanUrl,
-                            source = server.title
-                        ) {
-                            this.quality = getQuality(server.title)
-                            this.referer = mainUrl
-                            this.isM3u8 = cleanUrl.contains(".m3u8", ignoreCase = true)
-                        }
-                    )
-                }
-                servers.isNotEmpty()
-            } catch (e: Exception) {
-                false
-            }
+        if (scriptElement == null) {
+            return false
         }
 
-        return doc.select("iframe").isNotEmpty() || masterScript != null
+        val serversJson = scriptElement.data()
+            .substringAfter("var servers = ")
+            .substringBefore(";")
+            .trim()
+
+        return try {
+            val servers = AppUtils.parseJson<List<ServerData>>(serversJson)
+            
+            servers.forEach { server ->
+                val cleanUrl = server.url.replace("\\/", "/")
+                
+                // SOLUCIÓN FINAL: Usamos newExtractorLink con la sintaxis moderna de Cloudstream
+                callback(
+                    newExtractorLink(
+                        name = server.title,
+                        source = server.title,
+                        url = cleanUrl
+                    ).apply {
+                        this.quality = getQuality(server.title)
+                        this.referer = mainUrl
+                    }
+                )
+            }
+            servers.isNotEmpty()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     private fun getQuality(name: String): Int {
