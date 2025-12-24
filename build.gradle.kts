@@ -4,6 +4,14 @@ buildscript {
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
     }
+
+    // Esta es la corrección clave para saltar el error de jadb:master-SNAPSHOT
+    configurations.all {
+        resolutionStrategy {
+            force("com.github.vidstige:jadb:1.2.1")
+        }
+    }
+
     dependencies {
         classpath("com.android.tools.build:gradle:8.7.3")
         classpath("com.github.recloudstream:gradle:cce1b8d84d")
