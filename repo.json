@@ -3,6 +3,6 @@
   "description": "Repositorio para SeriesKao",
   "manifestVersion": 1,
   "pluginLists": [
-    "https://raw.githubusercontent.com/DamianKing12/Repositorio-Cloudstream-SeriesKao/builds/plugins.json"
+    "https://github.com/deivijosetorresramirez24-bit/Repositorio-Cloudstream-SeriesKao/raw/refs/heads/builds/plugins.json"
   ]
 }
