@@ -1,22 +1,26 @@
 [
-    {
-        "iconUrl": "https://www.google.com/s2/favicons?domain=serieskao.top&sz=%size%",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/DamianKing12/Repositorio-Cloudstream-SeriesKao",
-        "fileSize": 13633,
-        "status": 1,
-        "language": "es",
-        "authors": [
-            "DamianKing12"
-        ],
-        "tvTypes": [
-            "TvSeries",
-            "Movie"
-        ],
-        "version": 1,
-        "internalName": "SeriesKaoProvider",
-        "description": "Plugin para SeriesKao",
-        "url": "https://github.com/deivijosetorresramirez24-bit/Repositorio-Cloudstream-SeriesKao/raw/refs/heads/builds/SeriesKaoProvider.cs3",
-        "name": "SeriesKaoProvider"
-    }
+  {
+    "name": "SeriesKao",
+    "internalName": "SeriesKaoProvider",
+    "authors": ["DamianKing12"],
+    "description": "Plugin para SeriesKao",
+    "version": 1,
+    "tvTypes": ["TvSeries", "Movie"],
+    "language": "es",
+    "iconUrl": "https://www.google.com/s2/favicons?domain=serieskao.top&sz=64",
+    "url": "https://github.com/DamianKing12/Indexadores-3/raw/refs/heads/builds/SeriesKaoProvider.cs3",
+    "status": 1
+  },
+  {
+    "name": "Cuevana",
+    "internalName": "CuevanaProvider",
+    "authors": ["DamianKing12"],
+    "description": "Plugin para Cuevana",
+    "version": 1,
+    "tvTypes": ["TvSeries", "Movie"],
+    "language": "es",
+    "iconUrl": "https://www.google.com/s2/favicons?domain=cuevana.biz&sz=64",
+    "url": "https://github.com/DamianKing12/Indexadores-3/raw/refs/heads/builds/SeriesKaoProvider.cs3",
+    "status": 1
+  }
 ]
