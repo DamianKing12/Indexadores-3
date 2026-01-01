@@ -1,8 +1,8 @@
 {
-  "name": "SeriesKao Repository",
-  "description": "Repositorio para SeriesKao",
+  "name": "Indexadores DamianKing12",
+  "description": "Repositorio para SeriesKao y Cuevana",
   "manifestVersion": 1,
   "pluginLists": [
-    "https://github.com/deivijosetorresramirez24-bit/Repositorio-Cloudstream-SeriesKao/raw/refs/heads/builds/plugins.json"
+    "https://raw.githubusercontent.com/DamianKing12/Indexadores-3/builds/plugins.json"
   ]
 }
